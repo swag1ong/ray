@@ -53,6 +53,7 @@ int fake_munmap(void *, int64_t);
 #define DIRECT_MUNMAP(a, s) fake_munmap(a, s)
 #define USE_DL_PREFIX
 #define HAVE_MORECORE 0
+#define FOOTERS 1
 #define DEFAULT_MMAP_THRESHOLD MAX_SIZE_T
 #define DEFAULT_GRANULARITY ((size_t)128U * 1024U)
 
