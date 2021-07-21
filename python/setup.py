@@ -352,7 +352,8 @@ def build(build_python, build_java, build_cpp):
     bazel_targets += ["//java:ray_java_pkg"] if build_java else []
     return bazel_invoke(
         subprocess.check_call,
-        ["build", "--compilation_mode=dbg", "--verbose_failures", "--"] + bazel_targets,
+        ["build", "--compilation_mode=dbg", "--verbose_failures", "--"
+         ] + bazel_targets,
         env=bazel_env)
 
 
