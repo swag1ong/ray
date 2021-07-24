@@ -68,6 +68,12 @@ struct Allocation {
         offset(offset),
         device_num(device_num),
         mmap_size(mmap_size) {}
+
+  // only allow moves.
+  Allocation(const Allocation &) = delete;
+  Allocation &operator=(const Allocation &) = delete;
+  Allocation(Allocation &&) noexcept = default;
+  Allocation &operator=(Allocation &&) noexcept = default;
 };
 
 /// This type is used by the Plasma store. It is here because it is exposed to
