@@ -23,7 +23,7 @@
 
 namespace plasma {
 
-// PlasmaAllocator that allocates memory from mmaped file to
+// PlasmaAllocator that allocates memory from mmapped file to
 // enable memory sharing between processes.
 //
 // PlasmaAllocator is optimized for linux. On linux,
@@ -32,26 +32,26 @@ namespace plasma {
 // a pre-mmap file on disk.
 //
 // The FallbackAllocate always allocates memory from a disk
-// based mmap file.
+// based mmapped file.
 class PlasmaAllocator : public IAllocator {
  public:
-  /// PlasmaAllocator can only be created once per process.
-  /// This is because it uses dlmalloc to allocate memory under the hood,
-  /// whose metadata is a global state(singleton).
-  static PlasmaAllocator &GetInstance();
+  PlasmaAllocator(const std::string &plasma_directory,
+                  const std::string &fallback_directory, bool hugepage_enabled,
+                  int64_t footprint_limit, bool fallback_enabled);
 
-  /// On linux, it allocates memory from a pre-mmaped file from /dev/shm.
-  /// On other system, it allocates memory from a pre-mmaped file on disk.
+  /// On linux, it allocates memory from a pre-mmapped file from /dev/shm.
+  /// On other system, it allocates memory from a pre-mmapped file on disk.
   /// return null if running out of space.
   ///
   /// \param bytes Number of bytes.
   /// \return allocated memory. returns empty if not enough space.
   absl::optional<Allocation> Allocate(size_t bytes) override;
 
-  /// Fallback allocate memory from disk mmaped file.
+  /// Fallback allocate memory from disk mmapped file.
   /// On linux with fallocate support, it returns null if running out of
   /// space; On linux without fallocate it raises SIGBUS interrupt.
-  /// TODO(scv119): On other system the behavior is undefined.
+  /// TODO(scv119): On other system the behavior of running out of space is
+  /// undefined.
   ///
   /// \param bytes Number of bytes.
   /// \return allocated memory. returns empty if not enough space.
@@ -63,9 +63,6 @@ class PlasmaAllocator : public IAllocator {
   /// \param allocation allocation to free.
   void Free(const Allocation &allocation) override;
 
-  /// Sets the memory footprint limit for this allocator.
-  void SetFootprintLimit(size_t bytes) override;
-
   /// Get the memory footprint limit for this allocator.
   int64_t GetFootprintLimit() const override;
 
@@ -76,13 +73,11 @@ class PlasmaAllocator : public IAllocator {
   int64_t FallbackAllocated() const override;
 
  private:
-  explicit PlasmaAllocator(size_t alignment);
-
- private:
+  const int64_t kFootprintLimit;
   const size_t kAlignment;
+  const bool kFallbackEnabled;
   int64_t allocated_;
   int64_t fallback_allocated_;
-  int64_t footprint_limit_;
 };
 
 }  // namespace plasma

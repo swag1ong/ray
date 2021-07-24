@@ -49,22 +49,15 @@ class IAllocator {
   /// \param allocation allocation to free.
   virtual void Free(const Allocation &allocation) = 0;
 
-  /// Sets the memory footprint limit for this allocator.
-  ///
-  /// \param bytes memory footprint limit in bytes.
-  virtual void SetFootprintLimit(size_t bytes) = 0;
-
   /// Get the memory footprint limit for this allocator.
   ///
   /// \return memory footprint limit in bytes.
   virtual int64_t GetFootprintLimit() const = 0;
 
   /// Get the number of bytes allocated so far.
-  /// \return Number of bytes allocated so far.
   virtual int64_t Allocated() const = 0;
 
   /// Get the number of bytes fallback allocated so far.
-  /// \return Number of bytes fallback allocated so far.
   virtual int64_t FallbackAllocated() const = 0;
 };
 

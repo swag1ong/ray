@@ -144,8 +144,7 @@ GetRequest::GetRequest(instrumented_io_context &io_context,
   num_objects_to_wait_for = unique_ids.size();
 }
 
-PlasmaStore::PlasmaStore(instrumented_io_context &main_service, std::string directory,
-                         std::string fallback_directory, bool hugepages_enabled,
+PlasmaStore::PlasmaStore(instrumented_io_context &main_service, IAllocator &allocator,
                          const std::string &socket_name, uint32_t delay_on_oom_ms,
                          float object_spilling_threshold,
                          ray::SpillObjectsCallback spill_objects_callback,
@@ -156,7 +155,7 @@ PlasmaStore::PlasmaStore(instrumented_io_context &main_service, std::string dire
       socket_name_(socket_name),
       acceptor_(main_service, ParseUrlEndpoint(socket_name)),
       socket_(main_service),
-      allocator_(PlasmaAllocator::GetInstance()),
+      allocator_(allocator),
       eviction_policy_(&store_info_, allocator_),
       spill_objects_callback_(spill_objects_callback),
       add_object_callback_(add_object_callback),
@@ -171,9 +170,6 @@ PlasmaStore::PlasmaStore(instrumented_io_context &main_service, std::string dire
           /*get_time=*/
           []() { return absl::GetCurrentTimeNanos(); },
           [this]() { return GetDebugDump(); }) {
-  store_info_.directory = directory;
-  store_info_.fallback_directory = fallback_directory;
-  store_info_.hugepages_enabled = hugepages_enabled;
   const auto event_stats_print_interval_ms =
       RayConfig::instance().event_stats_print_interval_ms();
   if (event_stats_print_interval_ms > 0 && RayConfig::instance().event_stats()) {
@@ -190,8 +186,6 @@ void PlasmaStore::Start() {
 }
 
 void PlasmaStore::Stop() { acceptor_.close(); }
-
-const PlasmaStoreInfo *PlasmaStore::GetPlasmaStoreInfo() { return &store_info_; }
 
 // If this client is not already using the object, add the client to the
 // object's list of clients, otherwise do nothing.
