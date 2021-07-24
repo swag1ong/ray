@@ -24,6 +24,7 @@
 #include <unordered_map>
 
 #include "ray/common/id.h"
+#include "ray/object_manager/common.h"
 #include "ray/object_manager/plasma/compat.h"
 #include "ray/object_manager/plasma/plasma_generated.h"
 
@@ -72,25 +73,19 @@ struct Allocation {
 
 /// This type is used by the Plasma store. It is here because it is exposed to
 /// the eviction policy.
-struct ObjectTableEntry {
-  ObjectTableEntry(Allocation allocation);
+struct LocalObject {
+  LocalObject(Allocation allocation);
+
+  int64_t GetObjectSize() const {
+    return object_info.data_size + object_info.metadata_size;
+  }
 
   /// Allocation Info;
   Allocation allocation;
-  /// Size of the object in bytes.
-  int64_t data_size;
-  /// Size of the object metadata in bytes.
-  int64_t metadata_size;
+  /// Ray object info;
+  ray::ObjectInfo object_info;
   /// Number of clients currently using this object.
-  int ref_count;
-  /// Owner's raylet ID.
-  NodeID owner_raylet_id;
-  /// Owner's IP address.
-  std::string owner_ip_address;
-  /// Owner's port.
-  int owner_port;
-  /// Owner's worker ID.
-  WorkerID owner_worker_id;
+  mutable int ref_count;
   /// Unix epoch of when this object was created.
   int64_t create_time;
   /// How long creation of this object took.
@@ -100,8 +95,4 @@ struct ObjectTableEntry {
   /// The source of the object. Used for debugging purposes.
   plasma::flatbuf::ObjectSource source;
 };
-
-/// Mapping from ObjectIDs to information about the object.
-typedef std::unordered_map<ObjectID, std::unique_ptr<ObjectTableEntry>> ObjectTable;
-
 }  // namespace plasma
